@@ -22,9 +22,9 @@ return view.extend({
 
         let m, s, o;
 
-        m = new form.JSONMap({ log: {} });
+        m = new form.Map('momo');
 
-        s = m.section(form.NamedSection, 'log', 'log', _('Log'));
+        s = m.section(form.NamedSection, 'placeholder', 'placeholder', _('Log'));
 
         s.tab('app_log', _('App Log'));
 

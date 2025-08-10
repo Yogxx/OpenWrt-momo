@@ -20,9 +20,9 @@ return view.extend({
 
         let m, s, o;
 
-        m = new form.JSONMap({ editor: {} });
+        m = new form.Map('momo');
 
-        s = m.section(form.NamedSection, 'editor', 'editor', _('Editor'));
+        s = m.section(form.NamedSection, 'placeholder', 'placeholder', _('Editor'));
 
         o = s.option(form.ListValue, '_file', _('Choose File'));
         o.optional = true;

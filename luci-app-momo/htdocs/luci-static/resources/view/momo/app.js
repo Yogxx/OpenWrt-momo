@@ -37,9 +37,8 @@ return view.extend({
 
         m = new form.Map('momo', _('Momo'), `${_('Transparent Proxy with sing-box on OpenWrt.')} <a href="https://github.com/nikkinikki-org/OpenWrt-momo/wiki" target="_blank">${_('How To Use')}</a>`);
 
-        s = m.section(form.TableSection, 'status', _('Status'));
+        s = m.section(form.TableSection, 'placeholder', _('Status'));
         s.anonymous = true;
-		s.formvalue = function () {};
 
         o = s.option(form.Value, '_app_version', _('App Version'));
         o.readonly = true;

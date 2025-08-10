@@ -4,6 +4,8 @@
 
 # migrate
 
+section_placeholder=$(uci -q get momo.placeholder); [ -z "$section_placeholder" ] && uci set momo.placeholder="placeholder"
+
 # commit
 uci commit momo
 
