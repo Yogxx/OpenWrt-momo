@@ -60,9 +60,11 @@ start_service() {
 	config_get dns_inbound_tag "core" "dns_inbound_tag"
 	config_get fake_ip_dns_server_tag "core" "fake_ip_dns_server_tag"
     ## proxy config
-	local tcp_mode udp_mode
+	local tcp_mode udp_mode ipv4_dns_hijack ipv6_dns_hijack
 	config_get tcp_mode "proxy" "tcp_mode"
 	config_get udp_mode "proxy" "udp_mode"
+	config_get ipv4_dns_hijack "proxy" "ipv4_dns_hijack"
+	config_get ipv6_dns_hijack "proxy" "ipv6_dns_hijack"
 	# get profile
 	local profile_type; profile_type=$(echo "$profile" | cut -d ':' -f 1)
 	local profile_id; profile_id=$(echo "$profile" | cut -d ':' -f 2)
@@ -101,30 +103,32 @@ start_service() {
     if [ "$core_only" = 0 ]; then
 		log "Profile" "Checking..."
         if [ "$tcp_mode" = "redirect" ]; then
-            if (! jq --arg redirect_inbound_tag "$redirect_inbound_tag" -e '.inbounds | any(.tag == $redirect_inbound_tag)' "$RUN_PROFILE_PATH"); then
+            if (! jq --arg redirect_inbound_tag "$redirect_inbound_tag" -e '.inbounds | any(.tag == $redirect_inbound_tag and .type == "redirect")' "$RUN_PROFILE_PATH"); then
                 log "Profile" "Redirect inbound not found."
                 log "App" "Exit."
                 return
             fi
         fi
         if [ "$tcp_mode" = "tproxy" ] || [ "$udp_mode" = "tproxy" ]; then
-            if (! jq --arg tproxy_inbound_tag "$tproxy_inbound_tag" -e '.inbounds | any(.tag == $tproxy_inbound_tag)' "$RUN_PROFILE_PATH"); then
+            if (! jq --arg tproxy_inbound_tag "$tproxy_inbound_tag" -e '.inbounds | any(.tag == $tproxy_inbound_tag and .type == "tproxy")' "$RUN_PROFILE_PATH"); then
                 log "Profile" "TPROXY inbound not found."
                 log "App" "Exit."
                 return
             fi
         fi
         if [ "$tcp_mode" = "tun" ] || [ "$udp_mode" = "tun" ]; then
-            if (! jq --arg tun_inbound_tag "$tun_inbound_tag" -e '.inbounds | any(.tag == $tun_inbound_tag)' "$RUN_PROFILE_PATH"); then
+            if (! jq --arg tun_inbound_tag "$tun_inbound_tag" -e '.inbounds | any(.tag == $tun_inbound_tag and .type == "tun")' "$RUN_PROFILE_PATH"); then
                 log "Profile" "TUN inbound not found."
                 log "App" "Exit."
                 return
             fi
         fi
-		if (! jq --arg dns_inbound_tag "$dns_inbound_tag" -e '.inbounds | any(.tag == $dns_inbound_tag)' "$RUN_PROFILE_PATH"); then
-			log "Profile" "DNS inbound not found."
-			log "App" "Exit."
-			return
+        if [ "$ipv4_dns_hijack" = 1 ] || [ "$ipv6_dns_hijack" = 1 ]; then
+			if (! jq --arg dns_inbound_tag "$dns_inbound_tag" -e '.inbounds | any(.tag == $dns_inbound_tag and .type == "direct")' "$RUN_PROFILE_PATH"); then
+				log "Profile" "DNS inbound not found."
+				log "App" "Exit."
+				return
+			fi
 		fi
 		log "Profile" "Check passed."
     fi
