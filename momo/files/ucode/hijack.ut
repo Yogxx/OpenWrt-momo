@@ -559,6 +559,6 @@ table inet momo {
 }
 
 {% if (bypass_china_mainland_ip): %}
-include "/etc/momo/nftables/geoip_cn.nft"
-include "/etc/momo/nftables/geoip6_cn.nft"
+include "/etc/momo/firewall/geoip_cn.nft"
+include "/etc/momo/firewall/geoip6_cn.nft"
 {% endif %}

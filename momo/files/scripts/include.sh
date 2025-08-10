@@ -25,8 +25,8 @@ INCLUDE_SH="$SH_DIR/include.sh"
 FIREWALL_INCLUDE_SH="$SH_DIR/firewall_include.sh"
 DEBUG_SH="$SH_DIR/debug.sh"
 
-## nftables
-NFT_DIR="$HOME_DIR/nftables"
+## firewall
+NFT_DIR="$HOME_DIR/firewall"
 RESERVED_IP_NFT="$NFT_DIR/reserved_ip.nft"
 RESERVED_IP6_NFT="$NFT_DIR/reserved_ip6.nft"
 GEOIP_CN_NFT="$NFT_DIR/geoip_cn.nft"
