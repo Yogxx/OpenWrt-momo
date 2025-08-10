@@ -39,6 +39,7 @@ return view.extend({
 
         s = m.section(form.TableSection, 'status', _('Status'));
         s.anonymous = true;
+		s.formvalue = function () {};
 
         o = s.option(form.Value, '_app_version', _('App Version'));
         o.readonly = true;
