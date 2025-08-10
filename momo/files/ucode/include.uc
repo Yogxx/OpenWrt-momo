@@ -29,8 +29,8 @@ export function uci_array(obj) {
 };
 
 export function merge(target, ...sources) {
-    for (source in sources) {
-        for (key in keys(source)) {
+    for (let source in sources) {
+        for (let key in keys(source)) {
 			const target_value = target[key];
 			const target_value_type = type(target_value);
 			const source_value = source[key];
@@ -46,8 +46,8 @@ export function merge(target, ...sources) {
 };
 
 export function merge_exists(target, ...sources) {
-    for (source in sources) {
-        for (key in keys(source)) {
+    for (let source in sources) {
+        for (let key in keys(source)) {
 			if (exists(target, key)) {
 				const target_value = target[key];
 				const target_value_type = type(target_value);

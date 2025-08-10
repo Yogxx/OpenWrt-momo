@@ -2,7 +2,7 @@
 
 'use strict';
 
-import { access, popen, writefile } from 'fs';
+import { access, popen, readfile, writefile } from 'fs';
 import { get_paths, merge_exists, get_users, get_groups, get_cgroups } from '/etc/momo/ucode/include.uc';
 
 const methods = {
@@ -42,7 +42,7 @@ const methods = {
 		call: function(req) {
 			const paths = get_paths();
 			const defaults = req.args?.defaults ?? {};
-			const profile = readfile(paths.run_profile_path);
+			const profile = json(readfile(paths.run_profile_path));
 			return merge_exists(defaults, profile);
 		}
 	},

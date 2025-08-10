@@ -34,7 +34,7 @@ const callMomoVersion = rpc.declare({
 const callMomoProfile = rpc.declare({
     object: 'luci.momo',
     method: 'profile',
-    params: [ 'defaults' ],
+    params: ['defaults'],
     expect: { '': {} }
 });
 
@@ -87,9 +87,12 @@ return baseclass.extend({
     },
 
     api: async function (method, path, query, body) {
-        const profile = await callMomoProfile({ 'external-controller': null, 'secret': null });
-        const apiListen = profile['external-controller'];
-        const apiSecret = profile['secret'] ?? '';
+        const profile = await callMomoProfile({ 'experimental': { 'clash_api': { 'external_controller': null, 'secret': null } } });
+        const apiListen = profile?.['experimental']?.['clash_api']?.['external_controller'];
+        const apiSecret = profile?.['experimental']?.['clash_api']?.['secret'] ?? '';
+        if (!apiListen) {
+            return Promise.reject('Clash API has not been configured');
+        }
         const apiPort = apiListen.substring(apiListen.lastIndexOf(':') + 1);
         const url = `http://${window.location.hostname}:${apiPort}${path}`;
         return request.request(url, {
@@ -101,10 +104,12 @@ return baseclass.extend({
     },
 
     openDashboard: async function () {
-        const profile = await callMomoProfile({ 'external-ui-name': null, 'external-controller': null, 'secret': null });
-        const uiName = profile['external-ui-name'];
-        const apiListen = profile['external-controller'];
-        const apiSecret = profile['secret'] ?? '';
+        const profile = await callMomoProfile({ 'experimental': { 'clash_api': { 'external_controller': null, 'secret': null } } });
+        const apiListen = profile?.['experimental']?.['clash_api']?.['external_controller'];
+        const apiSecret = profile?.['experimental']?.['clash_api']?.['secret'] ?? '';
+        if (!apiListen) {
+            return Promise.reject('Clash API has not been configured');
+        }
         const apiPort = apiListen.substring(apiListen.lastIndexOf(':') + 1);
         const params = {
             host: window.location.hostname,
@@ -113,13 +118,9 @@ return baseclass.extend({
             secret: apiSecret
         };
         const query = new URLSearchParams(params).toString();
-        let url;
-        if (uiName) {
-            url = `http://${window.location.hostname}:${apiPort}/ui/${uiName}/?${query}`;
-        } else {
-            url = `http://${window.location.hostname}:${apiPort}/ui/?${query}`;
-        }
+        const url = `http://${window.location.hostname}:${apiPort}/ui/?${query}`;
         setTimeout(function () { window.open(url, '_blank') }, 0);
+        return Promise.resolve();
     },
 
     updateDashboard: function () {
