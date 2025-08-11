@@ -117,8 +117,8 @@ start_service() {
             fi
         fi
         if [ "$tcp_mode" = "tun" ] || [ "$udp_mode" = "tun" ]; then
-            if (! jq --arg tun_inbound_tag "$tun_inbound_tag" -e '.inbounds | any(.tag == $tun_inbound_tag and .type == "tun")' "$RUN_PROFILE_PATH"); then
-                log "Profile" "TUN inbound not found."
+            if (! jq --arg tun_inbound_tag "$tun_inbound_tag" -e '.inbounds | any(.tag == $tun_inbound_tag and .type == "tun" and has("interface_name"))' "$RUN_PROFILE_PATH"); then
+                log "Profile" "TUN inbound not found or interface_name is not defined."
                 log "App" "Exit."
                 return
             fi
