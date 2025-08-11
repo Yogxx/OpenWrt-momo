@@ -66,7 +66,7 @@ See [Wiki](https://github.com/nikkinikki-org/OpenWrt-momo/wiki)
 2. Set scheduled restart.
 3. Get neccesarry param from profile.
 4. Set ip rule/route.
-5. Generate nftables and apply it.
+5. Generate firewall and apply it.
 
 Note that the steps above may change base on config.
 
