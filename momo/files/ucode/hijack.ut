@@ -138,15 +138,15 @@
 -%}
 
 table inet momo {
+	{% if (length(dns_hijack_nfproto) > 0): %}
 	set dns_hijack_nfproto {
 		type nf_proto
 		flags interval
-		{% if (length(dns_hijack_nfproto) > 0): %}
 		elements = {
 			{{ join(', ', dns_hijack_nfproto) }}
 		}
-		{% endif %}
 	}
+	{% endif %}
 
 	set proxy_nfproto {
 		type nf_proto
@@ -224,6 +224,7 @@ table inet momo {
 	}
 
 	{% if (router_proxy): %}
+	{% if (length(dns_hijack_nfproto) > 0): %}
 	chain router_dns_hijack {
 		{% for (let access_control in router_access_control): %}
 		{% if (access_control['enabled']): %}
@@ -249,6 +250,7 @@ table inet momo {
 		{% endif %}
 		{% endfor %}
 	}
+	{% endif %}
 
 	chain router_redirect {
 		{% for (let access_control in router_access_control): %}
@@ -330,6 +332,7 @@ table inet momo {
 	{% endif %}
 
 	{% if (lan_proxy): %}
+	{% if (length(dns_hijack_nfproto) > 0): %}
 	chain lan_dns_hijack {
 		{% for (let access_control in lan_access_control): %}
 		{% if (access_control['enabled']): %}
@@ -353,6 +356,7 @@ table inet momo {
 		{% endif %}
 		{% endfor %}
 	}
+	{% endif %}
 
 	chain lan_redirect {
 		{% for (let access_control in lan_access_control): %}
@@ -435,7 +439,9 @@ table inet momo {
 		{% elif (cgroups_version == 2): %}
 		socket cgroupv2 level 2 "services/{{ cgroup_name }}" counter return
 		{% endif %}
+		{% if (length(dns_hijack_nfproto) > 0): %}
 		meta nfproto @dns_hijack_nfproto jump router_dns_hijack
+		{% endif %}
 		{% if (tcp_mode == 'redirect'): %}
 		fib daddr type { local, broadcast, anycast, multicast } counter return
 		ct direction reply counter return
@@ -478,7 +484,9 @@ table inet momo {
 		meta nfproto ipv6 meta l4proto . th dport != @proxy_dport {% if (fake_ip6_range ): %} ip6 daddr != {{ fake_ip6_range }} {% endif %} counter return
 		meta l4proto { tcp, udp } ip dscp @bypass_dscp {% if (fake_ip_range): %} ip daddr != {{ fake_ip_range }} {% endif %} counter return
 		meta l4proto { tcp, udp } ip6 dscp @bypass_dscp {% if (fake_ip6_range ): %} ip6 daddr != {{ fake_ip6_range }} {% endif %} counter return
+		{% if (length(dns_hijack_nfproto) > 0): %}
 		meta nfproto @dns_hijack_nfproto meta l4proto { tcp, udp } th dport 53 counter return
+		{% endif %}
 		{% if (tcp_mode == 'tproxy'): %}
 		meta nfproto @proxy_nfproto meta l4proto tcp jump router_tproxy
 		{% elif (tcp_mode == 'tun'): %}
@@ -505,7 +513,9 @@ table inet momo {
 	{% if (lan_proxy): %}
 	chain dstnat {
 		type nat hook prerouting priority dstnat + 1; policy accept;
+		{% if (length(dns_hijack_nfproto) > 0): %}
 		iifname @lan_inbound_device meta nfproto @dns_hijack_nfproto jump lan_dns_hijack
+		{% endif %}
 		{% if (tcp_mode == 'redirect'): %}
 		fib daddr type { local, broadcast, anycast, multicast } counter return
 		ct direction reply counter return
@@ -543,7 +553,9 @@ table inet momo {
 		meta nfproto ipv6 meta l4proto . th dport != @proxy_dport {% if (fake_ip6_range ): %} ip6 daddr != {{ fake_ip6_range }} {% endif %} counter return
 		meta l4proto { tcp, udp } ip dscp @bypass_dscp {% if (fake_ip_range): %} ip daddr != {{ fake_ip_range }} {% endif %} counter return
 		meta l4proto { tcp, udp } ip6 dscp @bypass_dscp {% if (fake_ip6_range ): %} ip6 daddr != {{ fake_ip6_range }} {% endif %} counter return
+		{% if (length(dns_hijack_nfproto) > 0): %}
 		meta nfproto @dns_hijack_nfproto meta l4proto { tcp, udp } th dport 53 counter return
+		{% endif %}
 		{% if (tcp_mode == 'tproxy'): %}
 		iifname @lan_inbound_device meta nfproto @proxy_nfproto meta l4proto tcp jump lan_tproxy
 		{% elif (tcp_mode == 'tun'): %}
