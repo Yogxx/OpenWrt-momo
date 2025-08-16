@@ -88,13 +88,13 @@ The package files will be found under `bin/packages/your_architecture/momo`.
 
 - ca-bundle
 - curl
-- jq
 - firewall4
 - ip-full
 - kmod-inet-diag
 - kmod-nft-socket
 - kmod-nft-tproxy
 - kmod-tun
+- sing-box
 
 ## Contributors
 
