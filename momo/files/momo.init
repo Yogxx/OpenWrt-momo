@@ -389,7 +389,7 @@ update_subscription() {
 	local subscription_file; subscription_file="$SUBSCRIPTIONS_DIR/$subscription_section.json"
 	if (curl -s -f -m 120 --connect-timeout 15 --retry 3 -L -X GET -A "$subscription_user_agent" -D "$subscription_header_tmpfile" -o "$subscription_tmpfile" "$subscription_url"); then
 		log "Profile" "Subscription download successful."
-        success=1
+		success=1
 	else
 		log "Profile" "Subscription download failed."
 		success=0

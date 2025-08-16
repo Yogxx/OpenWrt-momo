@@ -107,7 +107,7 @@
 	const proxy_udp_dport = split((uci.get('momo', 'proxy', 'proxy_udp_dport') ?? '0-65535'), ' ');
 	const bypass_dscp = uci_array(uci.get('momo', 'proxy', 'bypass_dscp'));
 
-	const cgroup_id = uci.get('momo', 'routing', 'cgroup_id') ?? '0x12061206';
+	const cgroup_id = uci.get('momo', 'routing', 'cgroup_id') ?? '0x07250725';
 	const cgroup_name = uci.get('momo', 'routing', 'cgroup_name') ?? 'momo';
 	const tproxy_fw_mark = uci.get('momo', 'routing', 'tproxy_fw_mark') ?? '80';
 	const tun_fw_mark = uci.get('momo', 'routing', 'tun_fw_mark') ?? '81';
@@ -164,7 +164,7 @@ table inet momo {
 		auto-merge
 		{% if (length(reserved_ip) > 0): %}
 		elements = {
-			{{ join(',', reserved_ip) }}
+			{{ join(', ', reserved_ip) }}
 		}
 		{% endif %}
 	}
@@ -175,7 +175,7 @@ table inet momo {
 		auto-merge
 		{% if (length(reserved_ip6) > 0): %}
 		elements = {
-			{{ join(',', reserved_ip6) }}
+			{{ join(', ', reserved_ip6) }}
 		}
 		{% endif %}
 	}
