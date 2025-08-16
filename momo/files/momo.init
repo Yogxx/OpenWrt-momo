@@ -59,12 +59,12 @@ start_service() {
 	config_get tun_inbound_tag "core" "tun_inbound_tag"
 	config_get dns_inbound_tag "core" "dns_inbound_tag"
 	config_get fake_ip_dns_server_tag "core" "fake_ip_dns_server_tag"
-    ## proxy config
-	local tcp_mode udp_mode ipv4_dns_hijack ipv6_dns_hijack
-	config_get tcp_mode "proxy" "tcp_mode"
-	config_get udp_mode "proxy" "udp_mode"
+	## proxy config
+	local ipv4_dns_hijack ipv6_dns_hijack tcp_mode udp_mode
 	config_get ipv4_dns_hijack "proxy" "ipv4_dns_hijack"
 	config_get ipv6_dns_hijack "proxy" "ipv6_dns_hijack"
+	config_get tcp_mode "proxy" "tcp_mode"
+	config_get udp_mode "proxy" "udp_mode"
 	# get profile
 	local profile_type; profile_type=$(echo "$profile" | cut -d ':' -f 1)
 	local profile_id; profile_id=$(echo "$profile" | cut -d ':' -f 2)
@@ -192,11 +192,11 @@ service_started() {
 	config_get tun_inbound_tag "core" "tun_inbound_tag"
 	## proxy config
 	### general
-	local tcp_mode udp_mode ipv4_proxy ipv6_proxy tun_timeout tun_interval
-	config_get tcp_mode "proxy" "tcp_mode"
-	config_get udp_mode "proxy" "udp_mode"
+	local ipv4_proxy ipv6_proxy tcp_mode udp_mode tun_timeout tun_interval
 	config_get_bool ipv4_proxy "proxy" "ipv4_proxy" 0
 	config_get_bool ipv6_proxy "proxy" "ipv6_proxy" 0
+	config_get tcp_mode "proxy" "tcp_mode"
+	config_get udp_mode "proxy" "udp_mode"
 	config_get tun_timeout "proxy" "tun_timeout" 30
 	config_get tun_interval "proxy" "tun_interval" 1
 	## routing config

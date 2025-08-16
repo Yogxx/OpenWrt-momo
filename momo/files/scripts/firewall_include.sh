@@ -7,9 +7,9 @@ config_load momo
 config_get_bool enabled "config" "enabled" 0
 config_get_bool core_only "config" "core_only" 0
 config_get_bool proxy_enabled "proxy" "enabled" 0 
-config_get tun_inbound_tag "core" "tun_inbound_tag"
 config_get tcp_mode "proxy" "tcp_mode"
 config_get udp_mode "proxy" "udp_mode"
+config_get tun_inbound_tag "core" "tun_inbound_tag"
 
 if [ "$enabled" = 1 ] && [ "$core_only" = 0 ] && [ "$proxy_enabled" = 1 ]; then
 	if [ "$tcp_mode" = "tun" ] || [ "$udp_mode" = "tun" ]; then
