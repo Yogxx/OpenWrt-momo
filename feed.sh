@@ -40,7 +40,7 @@ if [ -x "/bin/opkg" ]; then
 	rm -f "$key_build_pub_file"
 	# add feed
 	echo "add feed"
-	if (grep -q momo /etc/opkg/customfeeds.conf); then
+	if grep -q momo /etc/opkg/customfeeds.conf; then
 		sed -i '/momo/d' /etc/opkg/customfeeds.conf
 	fi
 	echo "src/gz momo $feed_url" >> /etc/opkg/customfeeds.conf
@@ -53,7 +53,7 @@ elif [ -x "/usr/bin/apk" ]; then
 	wget -O "/etc/apk/keys/momo.pem" "$repository_url/public-key.pem"
 	# add feed
 	echo "add feed"
-	if (grep -q momo /etc/apk/repositories.d/customfeeds.list); then
+	if grep -q momo /etc/apk/repositories.d/customfeeds.list; then
 		sed -i '/momo/d' /etc/apk/repositories.d/customfeeds.list
 	fi
 	echo "$feed_url/packages.adb" >> /etc/apk/repositories.d/customfeeds.list

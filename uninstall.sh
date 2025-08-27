@@ -20,14 +20,14 @@ rm -rf /var/log/momo
 rm -rf /var/run/momo
 # remove feed
 if [ -x "/bin/opkg" ]; then
-	if (grep -q momo /etc/opkg/customfeeds.conf); then
+	if grep -q momo /etc/opkg/customfeeds.conf; then
 		sed -i '/momo/d' /etc/opkg/customfeeds.conf
 	fi
 	wget -O "momo.pub" "https://momomomo.pages.dev/key-build.pub"
 	opkg-key remove momo.pub
 	rm -f momo.pub
 elif [ -x "/usr/bin/apk" ]; then
-	if (grep -q momo /etc/apk/repositories.d/customfeeds.list); then
+	if grep -q momo /etc/apk/repositories.d/customfeeds.list; then
 		sed -i '/momo/d' /etc/apk/repositories.d/customfeeds.list
 	fi
 	rm -f /etc/apk/keys/momo.pem
