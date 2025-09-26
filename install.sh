@@ -18,8 +18,8 @@ case "$DISTRIB_RELEASE" in
 	*"24.10"*)
 		branch="openwrt-24.10"
 		;;
-	"SNAPSHOT")
-		branch="SNAPSHOT"
+	"23.05")
+		branch="openwrt-23.05"
 		;;
 	*)
 		echo "unsupported release: $DISTRIB_RELEASE"
