@@ -18,20 +18,24 @@ on:
         default: ''
 
 jobs:
-  build:
-    name: ${{ matrix.arch }}-${{ matrix.branch }} build
+  build-and-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # IMPORTANT: Ini harus ada!
+    
     strategy:
-      fail-fast: false
       matrix:
-        arch:
-          - aarch64_generic
-          - x86_64
-        branch:
-          - openwrt-24.10
-          - openwrt-23.05
-
+        arch: [aarch64_generic, x86_64]
+        branch: [openwrt-24.10, openwrt-23.05]
+    
     steps:
+      - name: Debug - Check inputs
+        run: |
+          echo "Inputs received:"
+          echo "create_release: ${{ github.event.inputs.create_release }}"
+          echo "tag_name: ${{ github.event.inputs.tag_name }}"
+          echo "Should create release: ${{ github.event.inputs.create_release == 'yes' && github.event.inputs.tag_name != '' }}"
+
       - name: checkout
         uses: actions/checkout@v4
 
@@ -43,116 +47,95 @@ jobs:
           PACKAGES: luci-app-momo
           NO_REFRESH_CHECK: true
 
-      - name: Prepare release files
-        if: github.event.inputs.create_release == 'yes' && github.event.inputs.tag_name != ''
+      - name: Create release package
+        id: create_pkg
         run: |
-          echo "Preparing release files for tag: ${{ github.event.inputs.tag_name }}"
-          
-          # Buat tar.gz dari package yang dibuild
+          echo "Checking if package directory exists..."
           if [ -d "bin/packages/${{ matrix.arch }}/momo" ]; then
-            echo "Creating momo_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz"
+            echo "✓ Package directory exists"
+            # Hitung jumlah file .ipk
+            IPK_COUNT=$(find bin/packages/${{ matrix.arch }}/momo -name "*.ipk" | wc -l)
+            echo "Found $IPK_COUNT .ipk files"
+            
+            # Buat tar.gz
             tar -czf momo_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz -C bin/packages/${{ matrix.arch }}/momo .
+            echo "Created: momo_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz"
             
-            # List isi tar untuk debug
-            echo "Contents of tar file:"
-            tar -tzf momo_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz | head -20
-            
-            # Buat file info metadata
-            echo "Package: luci-app-momo" > release_info_${{ matrix.arch }}-${{ matrix.branch }}.txt
-            echo "Architecture: ${{ matrix.arch }}" >> release_info_${{ matrix.arch }}-${{ matrix.branch }}.txt
-            echo "OpenWrt Branch: ${{ matrix.branch }}" >> release_info_${{ matrix.arch }}-${{ matrix.branch }}.txt
-            echo "Build Date: $(date)" >> release_info_${{ matrix.arch }}-${{ matrix.branch }}.txt
-            echo "Commit: ${{ github.sha }}" >> release_info_${{ matrix.arch }}-${{ matrix.branch }}.txt
+            # Simpan nama file untuk step berikutnya
+            echo "PKG_FILE=momo_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz" >> $GITHUB_OUTPUT
           else
-            echo "ERROR: Directory bin/packages/${{ matrix.arch }}/momo not found!"
-            echo "Contents of bin/packages:"
-            find bin/packages -type f 2>/dev/null || echo "No files found"
+            echo "✗ ERROR: Directory bin/packages/${{ matrix.arch }}/momo not found!"
+            ls -la bin/packages/ || echo "bin/packages/ tidak ada"
             exit 1
           fi
 
-      - name: Upload build artifacts
+      - name: Upload as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: momo_${{ matrix.arch }}-${{ matrix.branch }}
-          path: bin/packages/${{ matrix.arch }}/momo
+          name: package-${{ matrix.arch }}-${{ matrix.branch }}
+          path: |
+            momo_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz
+            bin/packages/${{ matrix.arch }}/momo/
 
-  release:
+  create-release:
     if: github.event.inputs.create_release == 'yes' && github.event.inputs.tag_name != ''
-    needs: build
+    needs: build-and-release
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Permission untuk create release
+      contents: write  # CRITICAL: Permission untuk create release
+    
     steps:
-      - name: Download all build artifacts
+      - name: Debug before release
+        run: |
+          echo "=== DEBUG INFO ==="
+          echo "Tag name: ${{ github.event.inputs.tag_name }}"
+          echo "Event name: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Should create release: YES"
+
+      - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          path: release-assets
           
       - name: List downloaded files
         run: |
-          echo "Downloaded artifacts:"
-          find artifacts -type f -name "*.ipk" | head -20
+          echo "=== Downloaded files ==="
+          find release-assets -type f -name "*.tar.gz" | while read file; do
+            echo "📦 $(basename "$file") - $(du -h "$file" | cut -f1)"
+          done
           
-      - name: Prepare release assets
-        run: |
-          # Kumpulkan semua tar.gz dari matrix build
-          mkdir -p release_assets
+          # Pindahkan semua tar.gz ke root
+          find release-assets -name "*.tar.gz" -exec cp {} . \;
           
-          # Cari semua tar.gz yang dibuat oleh job build
-          echo "Looking for release tar.gz files..."
-          find . -name "momo_*.tar.gz" -exec cp {} release_assets/ \;
-          find . -name "release_info_*.txt" -exec cp {} release_assets/ \;
-          
-          echo "Release assets to be uploaded:"
-          ls -la release_assets/
-          
-          # Buat summary file
-          echo "# Release ${{ github.event.inputs.tag_name }}" > release_assets/RELEASE_NOTES.md
-          echo "Built on: $(date)" >> release_assets/RELEASE_NOTES.md
-          echo "Commit: ${{ github.sha }}" >> release_assets/RELEASE_NOTES.md
-          echo "" >> release_assets/RELEASE_NOTES.md
-          echo "## Architectures:" >> release_assets/RELEASE_NOTES.md
-          echo "- aarch64_generic" >> release_assets/RELEASE_NOTES.md
-          echo "- x86_64" >> release_assets/RELEASE_NOTES.md
-          echo "" >> release_assets/RELEASE_NOTES.md
-          echo "## OpenWrt Branches:" >> release_assets/RELEASE_NOTES.md
-          echo "- openwrt-23.05" >> release_assets/RELEASE_NOTES.md
-          echo "- openwrt-24.10" >> release_assets/RELEASE_NOTES.md
-          
-      - name: Debug - Check GITHUB_TOKEN permissions
-        run: |
-          echo "GITHUB_TOKEN will be used for release"
-          echo "Event inputs:"
-          echo "  create_release: ${{ github.event.inputs.create_release }}"
-          echo "  tag_name: ${{ github.event.inputs.tag_name }}"
-          
-      - name: Create GitHub Release
+          echo "=== Files ready for release ==="
+          ls -la *.tar.gz || echo "No tar.gz files found"
+
+      - name: Create Release
         uses: softprops/action-gh-release@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            release_assets/momo_*.tar.gz
-            release_assets/release_info_*.txt
-            release_assets/RELEASE_NOTES.md
+            *.tar.gz
           tag_name: ${{ github.event.inputs.tag_name }}
           name: Release ${{ github.event.inputs.tag_name }}
           body: |
             OpenWrt packages for luci-app-momo
             
-            **Build Details:**
-            - Commit: ${{ github.sha }}
-            - Date: ${{ github.event.created_at }}
+            **Version:** ${{ github.event.inputs.tag_name }}
+            **Build Date:** $(date)
             
-            **Supported Architectures:**
-            - aarch64_generic
+            **Packages included:**
+            - luci-app-momo
+            
+            **Architectures:**
+            - aarch64_generic (ARM64)
             - x86_64
             
             **OpenWrt Versions:**
-            - openwrt-23.05
-            - openwrt-24.10
+            - 23.05
+            - 24.10
             
-            Download the appropriate package for your architecture and OpenWrt version.
+            Extract the tar.gz file and copy the .ipk files to your OpenWrt device.
           draft: false
           prerelease: false
           generate_release_notes: true
