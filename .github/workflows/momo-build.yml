@@ -1,0 +1,70 @@
+name: Build and Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (tag)'
+        required: true
+        default: 'v1.0.0'
+      create_release:
+        description: 'Create GitHub Release?'
+        required: true
+        type: choice
+        options: ['yes', 'no']
+        default: 'yes'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        arch: [aarch64_generic, x86_64]
+        branch: [openwrt-24.10, openwrt-23.05]
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Build OpenWrt package
+        uses: openwrt/gh-action-sdk@main
+        env:
+          ARCH: ${{ matrix.arch }}-${{ matrix.branch }}
+          FEEDNAME: momo
+          PACKAGES: luci-app-momo
+          NO_REFRESH_CHECK: true
+
+      - name: Package for release
+        run: |
+          tar -czf momo_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz -C bin/packages/${{ matrix.arch }}/momo .
+        
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pkg-${{ matrix.arch }}-${{ matrix.branch }}
+          path: momo_${{ matrix.arch }}-${{ matrix.branch }}.tar.gz
+
+  release:
+    if: github.event.inputs.create_release == 'yes'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: packages
+          
+      - name: Prepare release files
+        run: |
+          find packages -name "*.tar.gz" -exec cp {} . \;
+          ls -la *.tar.gz
+          
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: '*.tar.gz'
+          tag_name: ${{ github.event.inputs.version }}
+          name: Release ${{ github.event.inputs.version }}
+          generate_release_notes: true
