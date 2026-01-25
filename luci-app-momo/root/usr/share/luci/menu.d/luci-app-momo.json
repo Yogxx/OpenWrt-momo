@@ -17,12 +17,12 @@
             "path": "momo/app"
         }
     },
-    "admin/services/momo/profile": {
-        "title": "Profile",
+    "admin/services/momo/configeditor": {
+        "title": "Config Editor",
         "order": 20,
         "action": {
             "type": "view",
-            "path": "momo/profile"
+            "path": "momo/configeditor"
         }
     },
     "admin/services/momo/proxy": {
