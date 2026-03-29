@@ -48,7 +48,7 @@ jobs:
 
     steps:
       - name: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: build
         uses: openwrt/gh-action-sdk@main
@@ -59,7 +59,7 @@ jobs:
           NO_REFRESH_CHECK: true
 
       - name: upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: momo_${{ matrix.arch }}-${{ matrix.branch }}
           path: bin/packages/${{ matrix.arch }}/momo
