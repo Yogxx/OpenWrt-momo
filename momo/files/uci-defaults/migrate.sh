@@ -37,6 +37,20 @@ section_log=$(uci -q get momo.log); [ -z "$section_log" ] && {
 	uci set momo.log.scheduled_clear_size_limit_unit=MB
 }
 
+section_mixin=$(uci -q get momo.mixin); [ -z "$section_mixin" ] && {
+	uci set momo.mixin=mixin
+	uci set momo.mixin.log_disabled='0'
+	uci set momo.mixin.log_level='info'
+	uci set momo.mixin.log_timestamp='1'
+	uci set momo.mixin.dns_independent_cache='1'
+	uci set momo.mixin.dns_reverse_mapping='1'
+	uci set momo.mixin.cache_enabled='1'
+	uci set momo.mixin.cache_store_fakeip='1'
+	uci set momo.mixin.cache_store_rdrc='1'
+	uci set momo.mixin.external_control_ui_path='ui'
+	uci set momo.mixin.external_control_ui_download_url='https://github.com/Zephyruso/zashboard/releases/latest/download/dist-cdn-fonts.zip'
+}
+
 # commit
 uci commit momo
 

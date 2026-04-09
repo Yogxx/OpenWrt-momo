@@ -129,6 +129,11 @@ start_service() {
 		log "App" "Exit."
 		return
 	fi
+	# mixin
+	if [ "$core_only" = 0 ]; then
+		log "Mixin" "Mixin config."
+		ucode -S "$MIXIN_UC"
+	fi
 	# check profile
 	if [ "$core_only" = 0 ] && [ "$proxy_enabled" = 1 ]; then
 		log "Profile" "Checking..."
