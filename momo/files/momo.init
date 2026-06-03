@@ -67,7 +67,9 @@ start_service() {
 	local fast_reload
 	config_get_bool fast_reload "procd" "fast_reload" 0
 	### rlimit
-	local rlimit_address_space_soft rlimit_address_space_hard rlimit_data_soft rlimit_data_hard rlimit_stack_soft rlimit_stack_hard rlimit_nofile_soft rlimit_nofile_hard
+	local rlimit_nproc_soft rlimit_nproc_hard rlimit_address_space_soft rlimit_address_space_hard rlimit_data_soft rlimit_data_hard rlimit_stack_soft rlimit_stack_hard rlimit_nofile_soft rlimit_nofile_hard
+	config_get rlimit_nproc_soft "procd" "rlimit_nproc_soft" "$(ulimit -Su)"
+	config_get rlimit_nproc_hard "procd" "rlimit_nproc_hard" "$(ulimit -Hu)"
 	config_get rlimit_address_space_soft "procd" "rlimit_address_space_soft"
 	config_get rlimit_address_space_hard "procd" "rlimit_address_space_hard"
 	config_get rlimit_data_soft "procd" "rlimit_data_soft"
@@ -76,6 +78,10 @@ start_service() {
 	config_get rlimit_stack_hard "procd" "rlimit_stack_hard"
 	config_get rlimit_nofile_soft "procd" "rlimit_nofile_soft" "$(ulimit -Sn)"
 	config_get rlimit_nofile_hard "procd" "rlimit_nofile_hard" "$(ulimit -Hn)"
+	### environment variable
+	local env_go_max_procs env_go_mem_limit
+	config_get env_go_max_procs "procd" "env_go_max_procs"
+	config_get env_go_mem_limit "procd" "env_go_mem_limit"
 	## core config
 	local redirect_inbound_tag tproxy_inbound_tag tun_inbound_tag dns_inbound_tag fake_ip_dns_server_tag
 	config_get redirect_inbound_tag "core" "redirect_inbound_tag"
@@ -199,10 +205,15 @@ start_service() {
 	fi
 	procd_set_param pidfile "$PID_FILE_PATH"
 	procd_set_param respawn
+
+	procd_append_param limits nproc="${rlimit_nproc_soft} ${rlimit_nproc_hard}"
 	procd_append_param limits as="${rlimit_address_space_soft:-unlimited} ${rlimit_address_space_hard:-unlimited}"
 	procd_append_param limits data="${rlimit_data_soft:-unlimited} ${rlimit_data_hard:-unlimited}"
 	procd_append_param limits stack="${rlimit_stack_soft:-unlimited} ${rlimit_stack_hard:-unlimited}"
 	procd_append_param limits nofile="${rlimit_nofile_soft} ${rlimit_nofile_hard}"
+
+	procd_append_param env GOMAXPROCS="$env_go_max_procs"
+	procd_append_param env GOMEMLIMIT="$env_go_mem_limit"
 
 	procd_close_instance
 	# cron
