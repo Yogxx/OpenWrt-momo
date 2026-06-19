@@ -17,6 +17,14 @@
             "path": "momo/app"
         }
     },
+    "admin/services/momo/configeditor": {
+        "title": "Config Editor",
+        "order": 15,
+        "action": {
+            "type": "view",
+            "path": "momo/configeditor"
+        }
+    },
     "admin/services/momo/profile": {
         "title": "Profile",
         "order": 20,
