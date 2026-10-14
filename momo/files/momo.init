@@ -185,7 +185,10 @@ start_service() {
 	# test profile
 	if [ "$test_profile" = 1 ]; then
 		log "Profile" "Testing..."
-		if $PROG -D "$RUN_DIR" check >> "$CORE_LOG_PATH" 2>&1; then
+		if env \
+			GOMAXPROCS="$env_go_max_procs" \
+			GOMEMLIMIT="$env_go_mem_limit" \
+			$PROG -D "$RUN_DIR" check >> "$CORE_LOG_PATH" 2>&1; then
 			log "Profile" "Test passed."
 		else
 			log "Profile" "Test failed."
